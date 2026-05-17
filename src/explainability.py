@@ -13,8 +13,12 @@ def explain_with_shap(model, X_train, X_test, feature_names, model_name: str = "
     """
     FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
+    # If the model is one of our regressor wrappers, point SHAP at the inner
+    # regressor so TreeExplainer can work on tree-based regressors directly.
+    underlying = getattr(model, "regressor_", model)
+
     try:
-        explainer = shap.TreeExplainer(model)
+        explainer = shap.TreeExplainer(underlying)
         shap_values = explainer.shap_values(X_test)
     except Exception:
         background = shap.sample(X_train, min(50, len(X_train)))

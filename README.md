@@ -4,13 +4,13 @@
 **Domain:** Healthcare & Bioinformatics (SDG 3 – Good Health & Well-being)
 **Institution:** Bahria University, H-11 Campus, Islamabad
 
-An end-to-end explainable AI framework that compares **7 machine learning algorithms** for cardiovascular disease risk prediction, with **SHAP** for transparent explanations, all wrapped in a **Streamlit web app**.
+An end-to-end explainable AI framework that compares **9 machine learning algorithms** for cardiovascular disease risk prediction, with **SHAP** for transparent explanations, all wrapped in a **Streamlit web app**.
 
 ---
 
 ## Highlights
 
-- **7 algorithms:** Logistic Regression, Decision Tree, Random Forest, SVM, KNN, XGBoost, MLP Neural Network
+- **9 algorithms** (6 classifiers + 3 regressors): Logistic Regression, Decision Tree Classifier, Random Forest Classifier, Support Vector Classifier, K-Nearest Neighbors, Naive Bayes, Decision Tree Regressor, Random Forest Regressor, Support Vector Regressor
 - **GridSearchCV** with **10-fold stratified cross-validation**
 - **SMOTE** for class balance
 - **SHAP** for global + per-patient explanations
@@ -19,15 +19,17 @@ An end-to-end explainable AI framework that compares **7 machine learning algori
 
 ## Results
 
-| Model               | Accuracy | Precision | Recall | F1     | ROC-AUC |
-|---------------------|---------:|----------:|-------:|-------:|--------:|
-| Logistic Regression |   0.869  |   0.813   | 0.964  | 0.867  | **0.966** |
-| SVM (RBF)           | **0.902**|   0.844   | 0.964  | **0.900** | **0.966** |
-| Neural Network (MLP)|   0.869  |   0.833   | 0.893  | 0.862  | 0.950   |
-| KNN                 | **0.902**| **0.867** | 0.929  | 0.897  | 0.948   |
-| Random Forest       |   0.852  |   0.806   | 0.893  | 0.847  | 0.946   |
-| XGBoost             |   0.885  |   0.862   | 0.893  | 0.877  | 0.936   |
-| Decision Tree       |   0.836  |   0.800   | 0.857  | 0.828  | 0.853   |
+| Model                          | Accuracy | Precision | Recall | F1     | ROC-AUC |
+|--------------------------------|---------:|----------:|-------:|-------:|--------:|
+| Logistic Regression            |   0.869  |   0.813   | 0.964  | 0.867  | **0.966** |
+| Support Vector Classifier      | **0.902**|   0.844   | 0.964  | **0.900** | **0.966** |
+| KNN                            | **0.902**| **0.867** | 0.929  | 0.897  | 0.948   |
+| Support Vector Regressor       |   0.852  |   0.806   | 0.893  | 0.847  | 0.948   |
+| Random Forest (Classifier)     |   0.852  |   0.806   | 0.893  | 0.847  | 0.946   |
+| Random Forest (Regressor)      |   0.885  |   0.818   | 0.964  | 0.885  | 0.929   |
+| Decision Tree (Classifier)     |   0.836  |   0.800   | 0.857  | 0.828  | 0.853   |
+| Decision Tree (Regressor)      |   0.836  |   0.800   | 0.857  | 0.828  | 0.853   |
+| Gaussian Naive Bayes           |   0.656  |   0.581   | 0.893  | 0.704  | 0.827   |
 
 ## Project structure
 
@@ -40,7 +42,7 @@ heart_disease_xai/
 │   ├── config.py                      central settings
 │   ├── data_loader.py                 load + clean
 │   ├── preprocessing.py               scale + encode + SMOTE
-│   ├── models.py                      7 algorithms + grids
+│   ├── models.py                      9 algorithms + grids
 │   ├── tuning.py                      GridSearchCV + 10-fold CV
 │   ├── evaluation.py                  metrics + comparison
 │   ├── visualize.py                   8 plots
@@ -65,7 +67,7 @@ heart_disease_xai/
 cd "heart_disease_xai"
 python -m src.train
 ```
-Tunes all 7 models with 10-fold CV, evaluates them on the held-out 20% test set, and writes plots + metrics under `results/`. Takes ~4 minutes on a laptop.
+Tunes all 9 models with 10-fold CV, evaluates them on the held-out 20% test set, and writes plots + metrics under `results/`. Takes ~2-3 minutes on a laptop.
 
 ### 2. Launch the web app
 ```powershell
@@ -80,7 +82,7 @@ Open `report/report.tex` on Overleaf or compile locally with `pdflatex`. Figures
 
 ```
 [UCI Cleveland Data] -> [Cleaning + Imputation] -> [Scaling + One-Hot]
-   -> [80/20 Stratified Split] -> [SMOTE on train] -> [GridSearchCV x 7 models]
+   -> [80/20 Stratified Split] -> [SMOTE on train] -> [GridSearchCV x 9 models]
    -> [10-fold CV] -> [Evaluation] -> [SHAP Explanations] -> [Streamlit Web App]
 ```
 

@@ -16,7 +16,7 @@
 
 \begin{document}
 
-\title{An Explainable AI Framework for Cardiovascular Disease Risk Prediction: A Comparative Study of Seven Machine Learning Algorithms}
+\title{Heart Disease Prediction Using Machine Learning Algorithms: A Comparative Study with Explainable AI}
 
 \author{
 \IEEEauthorblockN{Aqib}
@@ -29,11 +29,11 @@ maqib9254@gmail.com}
 \maketitle
 
 \begin{abstract}
-Cardiovascular disease (CVD) remains the leading cause of mortality worldwide, claiming an estimated 17.9 million lives every year. Although machine learning has demonstrated remarkable success in clinical prediction tasks, the ``black-box'' nature of high-performing models limits their adoption in real-world healthcare settings, where physicians require transparent and interpretable decision support. This work proposes an end-to-end explainable artificial intelligence (XAI) framework that combines a rigorous comparison of seven machine learning algorithms with SHAP (SHapley Additive exPlanations) for both global and patient-level explanations. We evaluate Logistic Regression, Decision Tree, Random Forest, Support Vector Machine, K-Nearest Neighbors, Extreme Gradient Boosting (XGBoost), and a Multilayer Perceptron neural network on the UCI Cleveland Heart Disease dataset. Hyperparameter tuning is performed using GridSearchCV with 10-fold stratified cross-validation, and class imbalance is addressed using the Synthetic Minority Oversampling Technique (SMOTE). The best-performing models---Logistic Regression and SVM---achieve a ROC-AUC of 0.9665 and an accuracy of 0.90 on a held-out test set. SHAP analysis reveals that chest pain type, number of major vessels, maximum heart rate, and ST depression are the most influential predictors of cardiovascular risk. The complete framework is deployed as an interactive Streamlit web application that delivers transparent, per-patient risk predictions in real time, addressing the SDG-3 (Good Health and Well-being) priorities of the United Nations 2030 Agenda.
+Cardiovascular disease (CVD) remains the leading cause of mortality worldwide, claiming an estimated 17.9 million lives every year. Although machine learning has demonstrated remarkable success in clinical prediction tasks, the ``black-box'' nature of high-performing models limits their adoption in real-world healthcare settings, where physicians require transparent and interpretable decision support. This work proposes an end-to-end explainable artificial intelligence (XAI) framework that combines a rigorous comparison of nine machine learning algorithms with SHAP (SHapley Additive exPlanations) for both global and patient-level explanations. We evaluate six classifiers---Logistic Regression, Decision Tree Classifier, Random Forest Classifier, Support Vector Classifier, K-Nearest Neighbors, and Gaussian Naive Bayes---together with three regression models adapted for binary classification: Decision Tree Regressor, Random Forest Regressor, and Support Vector Regressor. All models are evaluated on the UCI Cleveland Heart Disease dataset. Hyperparameter tuning is performed using GridSearchCV with 10-fold stratified cross-validation, and class imbalance is addressed using the Synthetic Minority Oversampling Technique (SMOTE). The best-performing models---Logistic Regression and the Support Vector Classifier---achieve a ROC-AUC of 0.966 and an accuracy of 0.90 on a held-out test set. SHAP analysis reveals that chest pain type, number of major vessels, maximum heart rate, and ST depression are the most influential predictors of cardiovascular risk. The complete framework is deployed as an interactive Streamlit web application that delivers transparent, per-patient risk predictions in real time, addressing the SDG-3 (Good Health and Well-being) priorities of the United Nations 2030 Agenda.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Explainable AI, SHAP, heart disease prediction, machine learning, healthcare, comparative study, XGBoost, SMOTE.
+Heart disease prediction, machine learning, explainable AI, SHAP, comparative study, classification, regression, Naive Bayes, SMOTE, healthcare.
 \end{IEEEkeywords}
 
 \section{Introduction}
@@ -47,7 +47,7 @@ Artificial intelligence (AI), and machine learning (ML) in particular, has emerg
 
 This paper addresses both gaps. We present an end-to-end explainable AI framework that:
 \begin{itemize}
-    \item systematically compares \textbf{seven} machine learning algorithms under identical preprocessing and tuning protocols;
+    \item systematically compares \textbf{nine} machine learning algorithms (six classifiers and three regressors adapted for binary classification) under identical preprocessing and tuning protocols;
     \item integrates the SHapley Additive exPlanations (SHAP) framework~\cite{lundberg2017unified} to produce both global feature-importance rankings and per-patient explanations;
     \item deploys the resulting model as an interactive web application targeted at clinical decision support.
 \end{itemize}
@@ -69,7 +69,7 @@ Fig.~\ref{fig:block} summarizes the proposed framework end-to-end.
 \begin{figure}[h]
     \centering
     \fbox{\parbox{0.95\columnwidth}{\centering
-    \texttt{[Raw UCI Cleveland Data]}\\$\downarrow$\\\texttt{Data Cleaning \& Imputation}\\$\downarrow$\\\texttt{Standard Scaling + One-Hot Encoding}\\$\downarrow$\\\texttt{Stratified Train/Test Split (80/20)}\\$\downarrow$\\\texttt{SMOTE Oversampling on Training Set}\\$\downarrow$\\\texttt{GridSearchCV + 10-Fold CV (7 Models)}\\$\downarrow$\\\texttt{Evaluation: Accuracy, F1, ROC-AUC, PR}\\$\downarrow$\\\texttt{SHAP Explainability (Global \& Local)}\\$\downarrow$\\\texttt{Streamlit Web Deployment}
+    \texttt{[Raw UCI Cleveland Data]}\\$\downarrow$\\\texttt{Data Cleaning \& Imputation}\\$\downarrow$\\\texttt{Standard Scaling + One-Hot Encoding}\\$\downarrow$\\\texttt{Stratified Train/Test Split (80/20)}\\$\downarrow$\\\texttt{SMOTE Oversampling on Training Set}\\$\downarrow$\\\texttt{GridSearchCV + 10-Fold CV (9 Models)}\\$\downarrow$\\\texttt{Evaluation: Accuracy, F1, ROC-AUC, PR}\\$\downarrow$\\\texttt{SHAP Explainability (Global \& Local)}\\$\downarrow$\\\texttt{Streamlit Web Deployment}
     }}
     \caption{Block diagram of the proposed explainable AI framework.}
     \label{fig:block}
@@ -79,19 +79,21 @@ Fig.~\ref{fig:block} summarizes the proposed framework end-to-end.
 Six records contained missing values in the \texttt{ca} and \texttt{thal} attributes; these were imputed using mode replacement. Five numerical features (\texttt{age}, \texttt{trestbps}, \texttt{chol}, \texttt{thalach}, \texttt{oldpeak}) were standardized using $z$-score normalization. Categorical features (\texttt{sex}, \texttt{cp}, \texttt{fbs}, \texttt{restecg}, \texttt{exang}, \texttt{slope}, \texttt{ca}, \texttt{thal}) were one-hot encoded. To handle the mild class imbalance (164 disease vs.\ 139 no-disease), we applied SMOTE \cite{chawla2002smote} to the training set only, leaving the held-out test set untouched to ensure unbiased evaluation.
 
 \subsection{Models}
-Seven classifiers were trained and compared:
+Nine models were trained and compared. Six are native classifiers, and three are regression models adapted for binary classification by thresholding the predicted continuous output at $0.5$:
 \begin{enumerate}
-    \item Logistic Regression (LR)
-    \item Decision Tree (DT)
-    \item Random Forest (RF)
-    \item Support Vector Machine with RBF kernel (SVM)
-    \item K-Nearest Neighbors (KNN)
-    \item Extreme Gradient Boosting (XGBoost) \cite{chen2016xgboost}
-    \item Multilayer Perceptron neural network (MLP) with two hidden layers $(64, 32)$
+    \item \textbf{Logistic Regression} (LR) -- a linear classifier estimating $P(y=1\mid \mathbf{x})$ via the sigmoid function.
+    \item \textbf{Decision Tree Classifier} (DTC) -- recursively partitions the feature space using information-gain criteria.
+    \item \textbf{Random Forest Classifier} (RFC) -- an ensemble of decorrelated decision trees, predictions aggregated by majority vote.
+    \item \textbf{Support Vector Classifier} (SVC) -- finds the maximum-margin hyperplane in a kernel-induced feature space (RBF kernel).
+    \item \textbf{K-Nearest Neighbors} (KNN) -- instance-based learner assigning the majority label among the $k$ nearest training examples.
+    \item \textbf{Gaussian Naive Bayes} (NB) -- probabilistic classifier assuming Gaussian likelihoods and feature independence.
+    \item \textbf{Decision Tree Regressor} (DTR) -- regression-tree variant; its real-valued output is thresholded to recover class labels.
+    \item \textbf{Random Forest Regressor} (RFR) -- ensemble of regression trees; mean prediction is thresholded to obtain a binary label.
+    \item \textbf{Support Vector Regressor} (SVR) -- $\varepsilon$-insensitive support vector regression; the continuous output is interpreted as a risk score.
 \end{enumerate}
 
 \subsection{Hyperparameter Tuning}
-For each model, GridSearchCV was performed over a model-specific search space with 10-fold stratified cross-validation, optimizing the ROC-AUC metric. The total number of fitted candidate models exceeded 1{,}500. The optimization-set ROC-AUC (Mean$_{\text{CV}}$) is reported in Table~\ref{tab:results}.
+For each model, GridSearchCV was performed over a model-specific search space with 10-fold stratified cross-validation, optimizing the ROC-AUC metric. The total number of fitted candidate models exceeded 1{,}000. The optimization-set ROC-AUC (Mean$_{\text{CV}}$) is reported in Table~\ref{tab:results}.
 
 \subsection{Evaluation Protocol}
 On the 20\% held-out test set we report accuracy, precision, recall, F1-score, and ROC-AUC. Confusion matrices, ROC curves, and precision--recall curves are also produced for every model.
@@ -106,28 +108,30 @@ Table~\ref{tab:results} summarizes the test-set performance of all seven models,
 
 \begin{table}[h]
 \centering
-\caption{Test-set performance after 10-fold CV hyperparameter tuning. Best per metric is shown in bold.}
+\caption{Test-set performance after 10-fold CV hyperparameter tuning, sorted by ROC-AUC. Best value per metric is shown in bold.}
 \label{tab:results}
 \renewcommand{\arraystretch}{1.15}
 \begin{tabular}{lccccc}
 \toprule
 \textbf{Model} & \textbf{Acc.} & \textbf{Prec.} & \textbf{Rec.} & \textbf{F1} & \textbf{AUC} \\
 \midrule
-Logistic Reg. & 0.869 & 0.813 & \textbf{0.964} & 0.867 & \textbf{0.966} \\
-SVM (RBF) & \textbf{0.902} & 0.844 & \textbf{0.964} & \textbf{0.900} & \textbf{0.966} \\
-MLP & 0.869 & 0.833 & 0.893 & 0.862 & 0.950 \\
+Logistic Regression & 0.869 & 0.813 & \textbf{0.964} & 0.867 & \textbf{0.966} \\
+Support Vector Classifier & \textbf{0.902} & 0.844 & \textbf{0.964} & \textbf{0.900} & \textbf{0.966} \\
 KNN & \textbf{0.902} & \textbf{0.867} & 0.929 & 0.897 & 0.948 \\
-Random Forest & 0.852 & 0.806 & 0.893 & 0.847 & 0.946 \\
-XGBoost & 0.885 & 0.862 & 0.893 & 0.877 & 0.936 \\
-Decision Tree & 0.836 & 0.800 & 0.857 & 0.828 & 0.853 \\
+Support Vector Regressor & 0.852 & 0.806 & 0.893 & 0.847 & 0.948 \\
+Random Forest (Classifier) & 0.852 & 0.806 & 0.893 & 0.847 & 0.946 \\
+Random Forest (Regressor) & 0.885 & 0.818 & \textbf{0.964} & 0.885 & 0.929 \\
+Decision Tree (Classifier) & 0.836 & 0.800 & 0.857 & 0.828 & 0.853 \\
+Decision Tree (Regressor) & 0.836 & 0.800 & 0.857 & 0.828 & 0.853 \\
+Gaussian Naive Bayes & 0.656 & 0.581 & 0.893 & 0.704 & 0.827 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Two observations stand out. First, Logistic Regression and SVM achieve the highest ROC-AUC (0.9665), demonstrating that on small tabular clinical datasets, simpler models remain highly competitive when tuned properly. Second, recall---arguably the most important metric in screening contexts, where missing a true positive is costlier than a false alarm---peaks at 0.964, indicating that the system would correctly flag the vast majority of at-risk patients.
+Several observations stand out. First, Logistic Regression and the Support Vector Classifier tie for the highest ROC-AUC (0.966), demonstrating that on small tabular clinical datasets, simpler models remain highly competitive when tuned properly. Second, recall---arguably the most important metric in screening contexts, where missing a true positive is costlier than a false alarm---peaks at 0.964, indicating that the system correctly flags the vast majority of at-risk patients. Third, the regression-based variants (Random Forest Regressor in particular) attain accuracy comparable to their classifier counterparts, confirming the validity of treating CVD risk as a continuous score that is later thresholded. Finally, Gaussian Naive Bayes underperforms (AUC $= 0.827$), an expected consequence of its conditional-independence assumption being violated by the strong correlations between cardiac-stress features such as \texttt{thalach}, \texttt{oldpeak}, and \texttt{slope}.
 
 \subsection{ROC and Precision--Recall Curves}
-Figure~\ref{fig:roc} (the ROC curves overlay) confirms that all models except the unconstrained Decision Tree exceed an AUC of 0.93, with the leading three models forming a tight cluster near the top-left corner of ROC space. The precision--recall curves show analogous behavior under class-imbalance, supporting the conclusion that the chosen preprocessing pipeline (SMOTE + scaling) generalizes well.
+Figure~\ref{fig:roc} (the ROC curves overlay) confirms that the four leading models---Logistic Regression, Support Vector Classifier, KNN, and Support Vector Regressor---exceed an AUC of $0.94$, forming a tight cluster near the top-left corner of ROC space. The precision--recall curves show analogous behavior under class-imbalance, supporting the conclusion that the chosen preprocessing pipeline (SMOTE + scaling) generalizes well.
 
 \begin{figure}[h]
     \centering
@@ -173,7 +177,7 @@ The framework is exposed as an interactive Streamlit web application (Fig.~\ref{
 \end{figure}
 
 \section{Conclusion and Future Work}\label{sec:conclusion}
-We have presented an end-to-end explainable AI framework for cardiovascular disease risk prediction. Among seven competing algorithms, a properly tuned Logistic Regression and an RBF-kernel SVM jointly achieve the strongest performance (ROC-AUC = 0.9665), demonstrating that simpler, interpretable models remain highly competitive on small clinical tabular datasets. SHAP explanations confirm that the learned representation aligns with established cardiology knowledge, and a Streamlit web app makes the entire pipeline accessible to non-technical users.
+We have presented an end-to-end explainable AI framework for cardiovascular disease risk prediction. Among nine competing algorithms---six classifiers and three regressors adapted for binary classification---a properly tuned Logistic Regression and an RBF-kernel Support Vector Classifier jointly achieve the strongest performance (ROC-AUC = 0.966), demonstrating that simpler, interpretable models remain highly competitive on small clinical tabular datasets. The regression variants of Decision Tree, Random Forest, and SVM achieve performance broadly comparable to their classifier counterparts, validating the use of risk-score regression in CVD prediction. SHAP explanations confirm that the learned representation aligns with established cardiology knowledge, and a Streamlit web app makes the entire pipeline accessible to non-technical users.
 
 Future work will (i) validate the framework on larger and more diverse cohorts (e.g.\ MIMIC-IV); (ii) extend it to multi-class severity prediction; (iii) incorporate temporal data through recurrent or transformer architectures; and (iv) conduct a clinical user study to evaluate the practical utility of the SHAP-based explanations in physician decision-making.
 
@@ -214,8 +218,14 @@ R. Detrano et al., ``International application of a new probability algorithm fo
 \bibitem{chawla2002smote}
 N. V. Chawla, K. W. Bowyer, L. O. Hall, and W. P. Kegelmeyer, ``SMOTE: Synthetic minority over-sampling technique,'' \emph{J. Artif. Intell. Res.}, vol. 16, pp. 321--357, 2002.
 
-\bibitem{chen2016xgboost}
-T. Chen and C. Guestrin, ``XGBoost: A scalable tree boosting system,'' in \emph{Proc. ACM SIGKDD}, 2016, pp. 785--794.
+\bibitem{rish2001nb}
+I. Rish, ``An empirical study of the Naive Bayes classifier,'' in \emph{IJCAI Workshop on Empirical Methods in AI}, 2001, pp. 41--46.
+
+\bibitem{drucker1997svr}
+H. Drucker, C. J. C. Burges, L. Kaufman, A. J. Smola, and V. Vapnik, ``Support vector regression machines,'' in \emph{Proc. NeurIPS}, 1996, pp. 155--161.
+
+\bibitem{breiman2001rf}
+L. Breiman, ``Random forests,'' \emph{Mach. Learn.}, vol. 45, no. 1, pp. 5--32, 2001.
 
 \bibitem{rajpurkar2022aiclinical}
 P. Rajpurkar et al., ``AI in health and medicine,'' \emph{Nat. Med.}, vol. 28, pp. 31--38, 2022.

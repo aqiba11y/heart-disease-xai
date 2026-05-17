@@ -242,7 +242,9 @@ def main():
             ### Methodology
             1. **Dataset:** UCI Cleveland Heart Disease (303 patients, 13 clinical features)
             2. **Preprocessing:** Missing-value imputation, standard scaling, one-hot encoding, SMOTE
-            3. **Models compared:** Logistic Regression, Decision Tree, Random Forest, SVM, KNN, XGBoost, MLP Neural Network
+            3. **9 Models compared** (6 classifiers + 3 regressors):
+               - **Classifiers:** Logistic Regression, Decision Tree Classifier, Random Forest Classifier, Support Vector Classifier, K-Nearest Neighbors, Gaussian Naive Bayes
+               - **Regressors (thresholded at 0.5):** Decision Tree Regressor, Random Forest Regressor, Support Vector Regressor
             4. **Hyperparameter tuning:** GridSearchCV with 10-fold stratified cross-validation
             5. **Evaluation:** Accuracy, Precision, Recall, F1, ROC-AUC, PR curves, confusion matrices
             6. **Explainability:** SHAP values for both global and per-patient explanations

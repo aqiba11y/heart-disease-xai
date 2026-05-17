@@ -54,7 +54,13 @@ def main():
     except Exception as exc:
         print(f"  SHAP failed for {best_name}: {exc}")
         # Fall back to a tree-friendly model
-        for fallback in ["XGBoost", "Random Forest", "Decision Tree"]:
+        for fallback in [
+            "Random Forest (Classification)",
+            "Decision Tree (Classification)",
+            "Random Forest (Regression)",
+            "Decision Tree (Regression)",
+            "Logistic Regression",
+        ]:
             if fallback in tuned_results and fallback != best_name:
                 print(f"  Trying fallback: {fallback}")
                 try:
