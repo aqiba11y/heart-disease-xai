@@ -68,9 +68,7 @@ We use the UCI Cleveland Heart Disease dataset \cite{detrano1989cleveland}, comp
 Fig.~\ref{fig:block} summarizes the proposed framework end-to-end.
 \begin{figure}[h]
     \centering
-    \fbox{\parbox{0.95\columnwidth}{\centering
-    \texttt{[Raw UCI Cleveland Data]}\\$\downarrow$\\\texttt{Data Cleaning \& Imputation}\\$\downarrow$\\\texttt{Standard Scaling + One-Hot Encoding}\\$\downarrow$\\\texttt{Stratified Train/Test Split (80/20)}\\$\downarrow$\\\texttt{SMOTE Oversampling on Training Set}\\$\downarrow$\\\texttt{GridSearchCV + 10-Fold CV (9 Models)}\\$\downarrow$\\\texttt{Evaluation: Accuracy, F1, ROC-AUC, PR}\\$\downarrow$\\\texttt{SHAP Explainability (Global \& Local)}\\$\downarrow$\\\texttt{Streamlit Web Deployment}
-    }}
+    \includegraphics[width=0.90\columnwidth]{../results/figures/00_system_block_diagram.png}
     \caption{Block diagram of the proposed explainable AI framework.}
     \label{fig:block}
 \end{figure}
@@ -91,6 +89,99 @@ Nine models were trained and compared. Six are native classifiers, and three are
     \item \textbf{Random Forest Regressor} (RFR) -- ensemble of regression trees; mean prediction is thresholded to obtain a binary label.
     \item \textbf{Support Vector Regressor} (SVR) -- $\varepsilon$-insensitive support vector regression; the continuous output is interpreted as a risk score.
 \end{enumerate}
+
+\subsection{Mathematical Formulations}\label{sec:math}
+Let $\mathbf{x} \in \mathbb{R}^{F}$ denote a preprocessed feature vector and $y \in \{0, 1\}$ the binary disease label. We summarise the decision rule of every model below.
+
+\subsubsection{Logistic Regression}
+A linear model whose output is squashed through the sigmoid function:
+\begin{equation}
+P(y = 1 \mid \mathbf{x}) = \sigma(\mathbf{w}^{\top}\mathbf{x} + b) = \frac{1}{1 + e^{-(\mathbf{w}^{\top}\mathbf{x} + b)}}
+\end{equation}
+Parameters $\mathbf{w}, b$ are learned by minimising the binary cross-entropy
+\begin{equation}
+\mathcal{L} = -\frac{1}{N}\sum_{i=1}^{N}\bigl[y_i \log \hat{y}_i + (1 - y_i)\log(1 - \hat{y}_i)\bigr].
+\end{equation}
+
+\subsubsection{Decision Tree Classifier and Regressor}
+Recursively splits the feature space to maximise node purity. For classification we use Gini impurity:
+\begin{equation}
+G(t) = 1 - \sum_{k=1}^{K} p_k^{2}(t),
+\end{equation}
+where $p_k(t)$ is the proportion of class $k$ at node $t$. The regression variant instead minimises mean squared error:
+\begin{equation}
+\mathrm{MSE}(t) = \frac{1}{|t|}\sum_{i \in t}(y_i - \bar{y}_t)^{2}.
+\end{equation}
+
+\subsubsection{Random Forest Classifier and Regressor}
+Ensemble of $M$ decorrelated trees trained on bootstrap samples~\cite{breiman2001rf}. The classifier aggregates by majority vote and the regressor by the mean:
+\begin{equation}
+\hat{y}_{\text{clf}} = \mathrm{mode}\{T_m(\mathbf{x})\}_{m=1}^{M}, \qquad
+\hat{y}_{\text{reg}} = \frac{1}{M}\sum_{m=1}^{M} T_m(\mathbf{x}).
+\end{equation}
+
+\subsubsection{Support Vector Classifier (RBF Kernel)}
+Finds the maximum-margin separating hyperplane in a high-dimensional feature space induced by the kernel:
+\begin{equation}
+\min_{\mathbf{w}, b, \boldsymbol{\xi}} \quad \frac{1}{2}\|\mathbf{w}\|^{2} + C\sum_{i=1}^{N}\xi_i,
+\end{equation}
+\begin{equation}
+\text{s.t. } y_i\bigl(\mathbf{w}^{\top}\phi(\mathbf{x}_i) + b\bigr) \geq 1 - \xi_i, \quad \xi_i \geq 0,
+\end{equation}
+\begin{equation}
+K(\mathbf{x}_i, \mathbf{x}_j) = \exp\bigl(-\gamma\|\mathbf{x}_i - \mathbf{x}_j\|^{2}\bigr).
+\end{equation}
+
+\subsubsection{Support Vector Regressor}
+Fits a function within an $\varepsilon$-insensitive tube~\cite{drucker1997svr}:
+\begin{equation}
+\min_{\mathbf{w}, b, \boldsymbol{\xi}, \boldsymbol{\xi}^{*}} \quad \frac{1}{2}\|\mathbf{w}\|^{2} + C\sum_{i=1}^{N}(\xi_i + \xi_i^{*}),
+\end{equation}
+\begin{equation}
+\begin{aligned}
+\text{s.t. } & y_i - \mathbf{w}^{\top}\phi(\mathbf{x}_i) - b \le \varepsilon + \xi_i,\\
+& \mathbf{w}^{\top}\phi(\mathbf{x}_i) + b - y_i \le \varepsilon + \xi_i^{*}.
+\end{aligned}
+\end{equation}
+
+\subsubsection{K-Nearest Neighbours}
+A lazy learner that assigns the label by majority vote over the $k$ nearest training samples under Euclidean distance:
+\begin{equation}
+d(\mathbf{x}_i, \mathbf{x}_j) = \sqrt{\sum_{f=1}^{F}(x_{i,f} - x_{j,f})^{2}}, \qquad
+\hat{y} = \mathrm{mode}\{y_{n_1}, \dots, y_{n_k}\}.
+\end{equation}
+
+\subsubsection{Gaussian Naive Bayes}
+Applies Bayes' theorem under the conditional-independence assumption~\cite{rish2001nb}:
+\begin{equation}
+P(y \mid \mathbf{x}) = \frac{P(y)\prod_{f=1}^{F} P(x_f \mid y)}{P(\mathbf{x})},
+\end{equation}
+\begin{equation}
+P(x_f \mid y) = \frac{1}{\sqrt{2\pi\sigma_{y,f}^{2}}}\exp\!\left(-\frac{(x_f - \mu_{y,f})^{2}}{2\sigma_{y,f}^{2}}\right).
+\end{equation}
+
+\subsubsection{Regressor-as-Classifier Wrapper}
+For the three regression models (DTR, RFR, SVR) we predict a continuous risk score $\tilde{y} \in \mathbb{R}$ and recover a class label via thresholding:
+\begin{equation}
+\hat{y} = \mathbb{1}\!\bigl[\,\tilde{y} \geq 0.5\,\bigr],
+\qquad
+P(y = 1 \mid \mathbf{x}) = \mathrm{clip}(\tilde{y}, 0, 1).
+\end{equation}
+
+\subsubsection{SHAP Explanations}
+Per-feature contributions are computed as Shapley values from cooperative game theory~\cite{lundberg2017unified}:
+\begin{equation}
+\phi_f = \!\!\!\sum_{S \subseteq \mathcal{F}\setminus\{f\}}\!\!\frac{|S|!\,(|\mathcal{F}| - |S| - 1)!}{|\mathcal{F}|!}\bigl[v(S \cup \{f\}) - v(S)\bigr].
+\end{equation}
+The SHAP additive property guarantees that for any prediction
+$\hat{y} = \phi_0 + \sum_{f=1}^{F}\phi_f$, where $\phi_0$ is the expected (average) model output.
+
+\subsubsection{Class Balancing with SMOTE}
+SMOTE~\cite{chawla2002smote} synthesises new minority-class samples by interpolating between neighbouring instances:
+\begin{equation}
+\mathbf{x}_{\text{new}} = \mathbf{x}_i + \lambda(\mathbf{x}_j - \mathbf{x}_i), \quad \lambda \sim \mathcal{U}(0, 1),
+\end{equation}
+where $\mathbf{x}_j$ is one of the $k$ nearest minority-class neighbours of $\mathbf{x}_i$.
 
 \subsection{Hyperparameter Tuning}
 For each model, GridSearchCV was performed over a model-specific search space with 10-fold stratified cross-validation, optimizing the ROC-AUC metric. The total number of fitted candidate models exceeded 1{,}000. The optimization-set ROC-AUC (Mean$_{\text{CV}}$) is reported in Table~\ref{tab:results}.
