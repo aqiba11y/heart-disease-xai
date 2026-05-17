@@ -62,36 +62,7 @@ Explainable AI (XAI) in the medical domain has gained considerable traction. Lun
 \section{Methodology}\label{sec:method}
 
 \subsection{Dataset}
-We use the UCI Cleveland Heart Disease dataset \cite{detrano1989cleveland}, comprising 303 patient records and 14 attributes (13 clinical features plus the target label). The original target indicates disease severity on a 0--4 scale; for binary classification we collapse it into ``no disease'' (target $= 0$) and ``disease'' (target $> 0$). A complete summary of every attribute is given in Table~\ref{tab:dataset}.
-
-\begin{table}[h]
-\centering
-\caption{Description of all 14 attributes in the UCI Cleveland Heart Disease dataset.}
-\label{tab:dataset}
-\renewcommand{\arraystretch}{1.10}
-\footnotesize
-\begin{tabular}{p{1.4cm}p{1.4cm}p{4.6cm}}
-\toprule
-\textbf{Attribute} & \textbf{Type} & \textbf{Description} \\
-\midrule
-age      & Numeric     & Age of the patient in years \\
-sex      & Categorical & Sex: 0 = female, 1 = male \\
-cp       & Categorical & Chest pain type (1 = typical angina, 2 = atypical, 3 = non-anginal, 4 = asymptomatic) \\
-trestbps & Numeric     & Resting blood pressure (mm Hg) \\
-chol     & Numeric     & Serum cholesterol (mg/dl) \\
-fbs      & Categorical & Fasting blood sugar $>120$ mg/dl (0 = false, 1 = true) \\
-restecg  & Categorical & Resting ECG (0 = normal, 1 = ST-T abnormality, 2 = LV hypertrophy) \\
-thalach  & Numeric     & Maximum heart rate achieved during exercise \\
-exang    & Categorical & Exercise-induced angina (0 = no, 1 = yes) \\
-oldpeak  & Numeric     & ST depression induced by exercise relative to rest \\
-slope    & Categorical & Slope of peak exercise ST segment (1 = up, 2 = flat, 3 = down) \\
-ca       & Categorical & Number of major vessels (0--3) colored by fluoroscopy \\
-thal     & Categorical & Thalassemia (3 = normal, 6 = fixed defect, 7 = reversible) \\
-\midrule
-target   & Binary      & Heart disease present (1) or not (0) \\
-\bottomrule
-\end{tabular}
-\end{table}
+We use the UCI Cleveland Heart Disease dataset \cite{detrano1989cleveland}, comprising 303 patient records and 14 attributes (13 clinical features plus the target label). The original target indicates disease severity on a 0--4 scale; for binary classification we collapse it into ``no disease'' (target $= 0$) and ``disease'' (target $> 0$). The 13 clinical features include demographic (age, sex), clinical history (chest-pain type, fasting blood sugar, exercise-induced angina), and diagnostic (resting blood pressure, cholesterol, maximum heart rate, ST depression, ECG findings, fluoroscopy results, and thalassemia status).
 
 \subsection{Block Diagram}
 Fig.~\ref{fig:block} summarizes the proposed framework end-to-end.
@@ -215,52 +186,11 @@ where $\mathbf{x}_j$ is one of the $k$ nearest minority-class neighbours of $\ma
 \subsection{Hyperparameter Tuning}
 For each model, GridSearchCV was performed over a model-specific search space with 10-fold stratified cross-validation, optimizing the ROC-AUC metric. The total number of fitted candidate models exceeded 1{,}000. The optimization-set ROC-AUC (Mean$_{\text{CV}}$) is reported in Table~\ref{tab:results}.
 
-\subsection{Evaluation Metrics}\label{sec:metrics}
-On the 20\% held-out test set every model is scored using the five standard binary-classification metrics derived from the confusion matrix elements --- true positives (TP), true negatives (TN), false positives (FP), and false negatives (FN). The formulas are:
+\subsection{Evaluation Protocol}
+On the 20\% held-out test set we report accuracy, precision, recall, F1-score, and ROC-AUC. Confusion matrices, ROC curves, and precision--recall curves are also produced for every model.
 
-\begin{equation}
-\text{Accuracy} = \frac{TP + TN}{TP + TN + FP + FN}
-\end{equation}
-
-\begin{equation}
-\text{Precision} = \frac{TP}{TP + FP}
-\end{equation}
-
-\begin{equation}
-\text{Recall (Sensitivity)} = \frac{TP}{TP + FN}
-\end{equation}
-
-\begin{equation}
-F_1 = 2 \times \frac{\text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}
-\end{equation}
-
-\begin{equation}
-\text{Specificity} = \frac{TN}{TN + FP}
-\end{equation}
-
-The Receiver Operating Characteristic (ROC) curve plots the true-positive rate (Recall) against the false-positive rate ($\text{FPR} = 1 - \text{Specificity}$) across all decision thresholds. The Area Under the ROC Curve (AUC) is then defined as
-\begin{equation}
-\text{AUC} = \int_{0}^{1} \text{TPR}(\text{FPR}) \, d(\text{FPR}),
-\end{equation}
-yielding a single threshold-independent measure of ranking quality (1.0 = perfect, 0.5 = random). Confusion matrices, ROC curves, and precision--recall curves are produced for every model.
-
-\subsection{Explainable AI Component}\label{sec:xai}
-To turn each model into a transparent decision-support tool we adopt SHAP (SHapley Additive exPlanations)~\cite{lundberg2017unified}, an attribution method grounded in cooperative game theory. The SHAP value $\phi_f$ of feature $f$ measures its average marginal contribution to the prediction over every possible coalition $S$ of the remaining features:
-\begin{equation}
-\phi_f = \!\!\!\sum_{S \subseteq \mathcal{F}\setminus\{f\}}\!\!\frac{|S|!\,(|\mathcal{F}| - |S| - 1)!}{|\mathcal{F}|!}\bigl[v(S \cup \{f\}) - v(S)\bigr],
-\end{equation}
-where $\mathcal{F}$ is the full feature set and $v(S)$ is the model's prediction restricted to the subset $S$. SHAP values satisfy three desirable axioms --- local accuracy, missingness, and consistency --- and obey the \emph{additive decomposition} property
-\begin{equation}
-\hat{y}(\mathbf{x}) = \phi_0 + \sum_{f=1}^{F}\phi_f(\mathbf{x}),
-\end{equation}
-where $\phi_0 = \mathbb{E}[\hat{y}(\mathbf{x})]$ is the dataset-wide baseline prediction.
-
-Two complementary visualisations are produced from these values:
-
-\begin{itemize}
-    \item \textbf{Global explanations} --- a bar plot of mean absolute SHAP values $\bar{\phi}_f = \tfrac{1}{N}\sum_{i=1}^{N}|\phi_f(\mathbf{x}_i)|$ ranks features by their overall influence on the model.
-    \item \textbf{Local (per-patient) explanations} --- a waterfall-style plot of $\phi_f(\mathbf{x})$ for an individual patient, showing exactly which clinical attributes pushed the predicted risk up (positive $\phi_f$) or down (negative $\phi_f$). These per-patient explanations are rendered inside the deployed Streamlit web application so that clinicians can audit each AI-generated risk score.
-\end{itemize}
+\subsection{Explainability with SHAP}
+Predictions from the best model are decomposed into per-feature contributions using SHAP. We generate (i) a \emph{global} bar plot of mean absolute SHAP values across the test set; (ii) a \emph{beeswarm} plot showing the distribution of contributions; and (iii) per-patient explanations rendered inside the web application.
 
 \section{Results and Discussion}\label{sec:results}
 
@@ -307,38 +237,6 @@ Figure~\ref{fig:roc} (the ROC curves overlay) confirms that the four leading mod
     \caption{Side-by-side comparison across five evaluation metrics.}
     \label{fig:metrics}
 \end{figure}
-
-\subsection{Risk Identification Factors}\label{sec:riskfactors}
-Beyond raw classification scores, our framework converts each clinical attribute into an interpretable cardiovascular-risk factor. Table~\ref{tab:risk} ranks the thirteen features by their mean absolute SHAP value on the test set and pairs each one with the medically-recognised direction of risk.
-
-\begin{table}[h]
-\centering
-\caption{Cardiovascular risk-identification factors with their direction of effect and associated SHAP-ranked importance.}
-\label{tab:risk}
-\renewcommand{\arraystretch}{1.10}
-\footnotesize
-\begin{tabular}{p{1.4cm}p{1.9cm}p{3.8cm}}
-\toprule
-\textbf{Feature} & \textbf{Risk Direction} & \textbf{Clinical Interpretation} \\
-\midrule
-cp       & Asymptomatic raises risk           & Asymptomatic chest pain (type 4) is the single strongest disease signal \\
-ca       & Higher $\Rightarrow$ higher risk    & More blocked major vessels indicate severe coronary disease \\
-thalach  & Lower $\Rightarrow$ higher risk     & Reduced peak heart rate signals poor cardiovascular fitness \\
-oldpeak  & Higher $\Rightarrow$ higher risk    & Larger ST depression indicates ischemia under stress \\
-thal     & Reversible defect raises risk      & Reversible thalassemia reflects induced perfusion abnormality \\
-exang    & Yes raises risk                   & Exercise-induced angina is a direct ischemic symptom \\
-slope    & Down/flat raises risk             & Abnormal ST slope reflects compromised cardiac output \\
-sex      & Male raises risk                  & Males show higher CVD prevalence at all ages \\
-age      & Higher $\Rightarrow$ higher risk    & Vascular aging compounds risk above 50 \\
-trestbps & Higher $\Rightarrow$ higher risk    & Sustained hypertension damages arterial walls \\
-chol     & Higher $\Rightarrow$ higher risk    & Elevated LDL accelerates atherosclerosis \\
-fbs      & Yes raises risk                   & Diabetes / poor glucose control is a CVD comorbidity \\
-restecg  & Abnormal raises risk              & ST-T or LV-hypertrophy patterns indicate strain \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Crucially, every factor surfaced by SHAP coincides with established cardiology guidelines~\cite{topol2019deep}, confirming that the framework has learned a clinically valid representation and not merely fit dataset-specific noise.
 
 \subsection{SHAP Interpretation}
 Figure~\ref{fig:shap} reports the global SHAP feature importance for the best-performing Logistic Regression model. The most influential predictors are:
